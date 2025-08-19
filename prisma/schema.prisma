@@ -10,6 +10,38 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Default {
-  id Int @id @default(autoincrement())
+model User {
+  id String @id @default(uuid())
+
+  username String
+  password String
+  created_at DateTime @default(now())
+
+  first_name String?
+  last_name String?
+
+  highscores Highscore[]
+}
+
+model Game {
+  id String @id @default(uuid())
+
+  name String
+
+  order String // "descending" | "ascending"
+  
+  highscores Highscore[]
+}
+
+model Highscore {
+  id String @id @default(uuid())
+
+  created_at DateTime @default(now())
+
+  value Float
+
+  user_id String
+  user User @relation(fields: [user_id], references: [id])
+  game_id String
+  game Game @relation(fields: [game_id], references: [id])
 }

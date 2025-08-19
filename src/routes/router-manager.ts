@@ -1,8 +1,10 @@
 import { Router }from 'express';
 const router = Router();
 
-import defaultRoute from './default-route.js';
+import auth_route from './auth-route.js';
+import highscore_route from './highscore-route.js';
 
-router.use('/default', defaultRoute);
+router.use('/auth', auth_route);
+router.use('/highscore', highscore_route);
 
 export default router;
