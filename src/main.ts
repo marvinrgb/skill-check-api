@@ -1,5 +1,6 @@
-import express, { Application, json as parseRequestJSON, urlencoded as parseURLQuery } from 'express';
+import express, { Application, json as parseRequestJSON, urlencoded as parseURLQuery, Request, Response, NextFunction } from 'express';
 import RouteManager from './routes/router-manager.js';
+import logger from './helper/logger.js';
 
 // if there a env set use it as port, if not use 3000
 const port: number = process.env.API_PORT ? Number(process.env.API_PORT) : 3000;
@@ -21,10 +22,23 @@ app.use((req,res,next) => {
   next();
 })
 
+// Middleware to log requests
+app.use((req: Request, res: Response, next: NextFunction) => {
+  logger.info(`${req.method} ${req.url}`);
+  next();
+});
+
 // forwards all requests under /api to the routeManager, wich distributes them further
 app.use('/api', RouteManager);
 
+// Global error handler
+app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+  logger.error(err.stack);
+  res.status(500).send('Something broke!');
+});
+
+
 // starts the server under the specified port
 app.listen(port, () => {
-  console.log(`api running on port ${port}`);
+  logger.info(`api running on port ${port}`);
 });

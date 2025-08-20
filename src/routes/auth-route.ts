@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken"
 import { authenticateToken } from '../helper/token-verify.js';
 import { doesUsernameExist } from '../helper/auth-helper.js';
 import db from '../helper/db.js';
+import logger from '../helper/logger.js';
 
 const router = Router();
 
@@ -13,11 +14,13 @@ router.post('/login', async (req:Request, res:Response, next:NextFunction): Prom
 
   // Check if username and password are provided
   if (!username || !password) {
+    logger.warn(`Login failed for user ${username}: Username and password are required.`);
     res.status(400).json({ error: 'Username and password are required' });
     return;
   }
   // Check if the username exists
   if (!(await doesUsernameExist(username))) {
+    logger.warn(`Login failed for user ${username}: Username does not exist.`);
     res.status(400).json({ error: 'Username does not exist' });
     return;
   }  
@@ -30,6 +33,7 @@ router.post('/login', async (req:Request, res:Response, next:NextFunction): Prom
       }
     });
     if (!user) {
+      logger.warn(`Login failed for user ${username}: User does not exist.`);
       res.status(400).json({ error: 'User does not exist' });
       return;
     }  
@@ -37,6 +41,7 @@ router.post('/login', async (req:Request, res:Response, next:NextFunction): Prom
     // Check if the password is valid
     const isPasswordValid = await bcrypt.compare(password, user?.password)
     if (!isPasswordValid) {
+      logger.warn(`Login failed for user ${username}: Invalid credentials.`);
       res.status(400).json({ error: 'Invalid credentials' });
       return;
     }  
@@ -44,6 +49,7 @@ router.post('/login', async (req:Request, res:Response, next:NextFunction): Prom
     // Create a JWT token
     const token = jwt.sign({ userId: user.id, username: user.username }, process.env.JWT_SECRET, { expiresIn: '1h' });
 
+    logger.info(`User ${username} logged in successfully.`);
     res.json({ message: 'Login successful', token });
 
 
@@ -58,11 +64,13 @@ router.post('/register', async (req:Request, res:Response, next:NextFunction): P
 
   // Check if username and password are provided
   if (!username || !password) {
+    logger.warn(`Registration failed for user ${username}: Username and password are required.`);
     res.status(400).json({ error: 'Username and password are required' });
     return;
   }
   // Check if the username is already taken
   if (await doesUsernameExist(username)) {
+    logger.warn(`Registration failed for user ${username}: Username already taken.`);
     res.status(400).json({ error: 'Username already taken' });
     return;
   }  
@@ -79,6 +87,7 @@ router.post('/register', async (req:Request, res:Response, next:NextFunction): P
       }
     });
     
+    logger.info(`User ${username} registered successfully.`);
     res.json({ message: 'User created successfully', user: newUser });
   } catch (error: unknown) {
     return next(error);
@@ -96,6 +105,7 @@ router.get("/info", authenticateToken, async (req:Request, res:Response, next:Ne
     });
     // Remove the password from the user object
     const {password, ...otherUserData} = user;
+    logger.info(`User info accessed for user ${req.user?.username}`);
     res.json(otherUserData);
   } catch (error) {
     next(error);
