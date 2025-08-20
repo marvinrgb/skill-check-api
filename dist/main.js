@@ -28,6 +28,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importStar(require("express"));
 const router_manager_js_1 = __importDefault(require("./routes/router-manager.js"));
+const logger_js_1 = __importDefault(require("./helper/logger.js"));
 // if there a env set use it as port, if not use 3000
 const port = process.env.API_PORT ? Number(process.env.API_PORT) : 3000;
 const app = (0, express_1.default)();
@@ -42,9 +43,20 @@ app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Headers', '*');
     next();
 });
+// Middleware to log requests
+app.use((req, res, next) => {
+    console.log(req.body);
+    logger_js_1.default.info(`${req.method} ${req.url}`);
+    next();
+});
 // forwards all requests under /api to the routeManager, wich distributes them further
 app.use('/api', router_manager_js_1.default);
+// Global error handler
+app.use((err, req, res, next) => {
+    logger_js_1.default.error(err.stack);
+    res.status(500).send('Something broke!');
+});
 // starts the server under the specified port
 app.listen(port, () => {
-    console.log(`api running on port ${port}`);
+    logger_js_1.default.info(`api running on port ${port}`);
 });

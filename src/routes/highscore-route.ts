@@ -44,7 +44,7 @@ router.get("/:game_id", async (req:Request, res:Response, next:NextFunction): Pr
   }
   try {
     // Find all highscores for the game in the database
-    const highscores = db.highscore.findMany({
+    const highscores = await db.highscore.findMany({
       where: {
         game_id: game_id
       },

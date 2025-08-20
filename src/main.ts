@@ -24,6 +24,7 @@ app.use((req,res,next) => {
 
 // Middleware to log requests
 app.use((req: Request, res: Response, next: NextFunction) => {
+  console.log(req.body)
   logger.info(`${req.method} ${req.url}`);
   next();
 });
